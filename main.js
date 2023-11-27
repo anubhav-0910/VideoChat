@@ -5,6 +5,15 @@ let uid = String(Math.floor(Math.random() * 1000000000));
 let client;
 let channel;
 
+// Getting the room name from the URL
+let queryString = window.location.search;
+let urlParams = new URLSearchParams(queryString);
+let roomId = urlParams.get('room');
+
+if(!roomId){
+  window.location = 'lobby.html';
+}
+
 let localStream;    // for my video
 let remoteStream;   // for friend's video
 let peerConnection; // RTCPeerConnection object
@@ -24,7 +33,7 @@ let init = async () => {
   await client.login({uid, token})
 
   // Creating the Agora channel
-  channel = client.createChannel('main');
+  channel = client.createChannel(roomId);
   await channel.join();
 
   // Listening for following events event
