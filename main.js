@@ -1,4 +1,4 @@
-let app_id = 'your_app_id';
+let app_id = 'your-app-id';
 let token = null;
 let uid = String(Math.floor(Math.random() * 1000000000));
 
@@ -26,6 +26,15 @@ const servers = {
   ]
 }
 
+const constraints = {
+    video : {
+      width: { min: 640, ideal: 1920, max: 1920 },
+      height: { min: 400, ideal: 1080 , max: 1080},
+      aspectRatio: 1.777777778,
+      frameRate: { max: 60 },
+    },
+    audio : true
+  };
 
 let init = async () => {
   // Creating the Agora client
@@ -42,7 +51,7 @@ let init = async () => {
   client.on('MessageFromPeer', handleMessageFromPeer);
 
   // Accessing the camera and microphone
-  localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+  localStream = await navigator.mediaDevices.getUserMedia(constraints);
 
   // Displaying my video stream on my video element
   document.getElementById('user1').srcObject = localStream;
@@ -51,6 +60,8 @@ let init = async () => {
 let handleuserLeft = async (memberId) => {
   console.log('A user left the channel', memberId);
   document.getElementById('user2').style.display = 'none';
+  document.getElementById('user1').classList.remove('smallFrame');
+
 }
 let handleMessageFromPeer = async (message, memberId) => {
   message = JSON.parse(message.text);
@@ -81,6 +92,9 @@ let createPeerConnection = async (memberId) => {
   // Display friend's video stream
   document.getElementById('user2').srcObject = remoteStream;
   document.getElementById('user2').style.display = 'block';
+
+  document.getElementById('user1').classList.add('smallFrame');
+
 
   if(!localStream){
     localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -152,6 +166,36 @@ let leaveChannel = async () => {
   await channel.leave();
   await client.logout();
 }
+
+let toggleCamera = async () => {
+  let videoTrack = localStream.getTracks().find(track => track.kind === 'video');
+
+  if(videoTrack.enabled){
+    videoTrack.enabled = false;
+    document.getElementById('camera-btn').style.backgroundColor = 'firebrick';
+  }
+  else{
+    videoTrack.enabled = true;
+    document.getElementById('camera-btn').style.backgroundColor = 'rgba(54, 102, 207, 0.67)';
+  }
+}
+
+let toggleMic = async () => {
+  let micTrack = localStream.getTracks().find(track => track.kind === 'audio');
+
+  if(micTrack.enabled){
+    micTrack.enabled = false;
+    document.getElementById('mic-btn').style.backgroundColor = 'firebrick';
+  }
+  else{
+    micTrack.enabled = true;
+    document.getElementById('mic-btn').style.backgroundColor = 'rgba(54, 102, 207, 0.67)';
+  }
+}
+
 window.addEventListener('beforeunload', leaveChannel);
+
+document.getElementById('camera-btn').addEventListener('click', toggleCamera);
+document.getElementById('mic-btn').addEventListener('click', toggleMic);
 
 init();
